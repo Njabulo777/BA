@@ -2,7 +2,7 @@
 title: "Ratings Based Product Conjoint Analysis"
 author: "Njabulo Hlabangana"
 date: '2022-08-06'
-output: github_document
+output: html_document
 ---
 
 
@@ -30,8 +30,8 @@ library(tidyverse) #used for manipulation of data frames
 In this data set, 15 consumers where asked to each rate 10 ice cream profiles on a scale of 1 to 10 - 1 being the least and 10 being the best.Below is a look at the first 10 rows of the dataframe.
 
 ```{r}
-setwd('/Users/hlaba/Documents/Custom Office Templates')
-icecream <- read.csv('Ice cream.csv')
+setwd('/Users/hlaba/Documents/Custom Office Templates/BA')
+icecream <- read.csv('Ice Cream.csv')
 head(icecream,10)
 ```
 ## Conjoint Analysis
@@ -104,4 +104,5 @@ market_share <- most_preferred_by_respondent[-1] %>%
 
 market_share
 ```
+
 
