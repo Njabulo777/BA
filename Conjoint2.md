@@ -1,7 +1,7 @@
 Ratings Based Product Conjoint Analysis
 ================
 Njabulo Hlabangana
-2022-08-06
+2022-09-03
 
 ## Introduction
 
@@ -147,6 +147,17 @@ plot(conjoint_allrespondents)
 
 ![](Conjoint2_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
+## Creating All possible profiles
+
+Flavor has 5 levels, packaging has 3, organic has 2 and light has 2.
+These factor levels can be combined in 60 (5 x 3 x 2 x 2) unique ways.
+These are all the possible product profiles that can be designed from
+these attributes and their respective levels. Of all these 60 profiles,
+only 10 were used in the study and the findings of the will be used to
+make inferences and predictions about the rest of the possible profiles.
+The following chunk of code does exactly that using the base R
+expand.grid function. The different profiles can be seen below.
+
 ``` r
 flavor <- unique(icecream$Flavor)
 packaging <- unique(icecream$Packaging)
@@ -221,15 +232,15 @@ print(all_profiles)
     ## 59    Vanilla            Pint    Low fat     Organic
     ## 60      Mango            Pint    Low fat     Organic
 
-\##Predicting Consumer Preferences
+## Predicting Consumer Preferences
 
 The radiant package comes with the function to predict ratings of
-products including those that were not part of the study based on the
-study findings. The outcome of the prediction of all possible profiles
-is shown below. The product profiles are shown in descending order of
-predicted rating. In a line with our previous finding, the combination
-of Mango, Cone, No low fat and organic is predicted to have the highest
-utility.
+products including those that were not part of the study based on
+information learned/mined from the study sample. The outcome of the
+prediction of all possible profiles is shown below. The product profiles
+are shown in descending order of predicted rating. In line with our
+previous finding, the combination of Mango, Cone, No low fat and organic
+is predicted to have the highest utility.
 
 ``` r
 predictions <- predict(conjoint_allrespondents, all_profiles) %>% arrange(desc(Prediction))
@@ -269,19 +280,41 @@ predictions
 
 So far the analysis conducted was based on the average rating of product
 profiles by all respondents. This part seeks to ascertain the rating per
-individual with the aim to predict how each respondent would rate
-profile that may not have been part of the study. This is done by adding
-the “by = respondent” argument in the conjoint function.
+individual with the aim to predict how each respondent would rate each
+profile that may not have been part of the study.
+
+It is rarely possible for a company to produce all the possible product
+profiles. In this exercise we assume the company chose to produce the
+top 5 rated profiles based on the previous predictions.The chosen
+profiles are shown below.
 
 ``` r
 conjoint_by_respondent <- conjoint(icecream, rvar = "Rating", evar = c("Flavor","Packaging","Light","Organic"), by = "Respondent")
 
 selected_profiles <- slice_head(predictions,n = 5) # selecting top 5 predicted profiles
 
-selected_profile_ratings <- predict(conjoint_by_respondent, selected_profiles)# ascertaining predicted ratings of the top five for each respondent 
+print(selected_profiles)
 ```
 
+    ## Conjoint Analysis
+    ## Data                 : icecream 
+    ## Response variable    : Rating 
+    ## Explanatory variables: Flavor, Packaging, Light, Organic 
+    ## Prediction dataset   : all_profiles 
+    ## 
+    ##   Flavor       Packaging      Light Organic Prediction
+    ##    Mango            Cone No low fat Organic      6.664
+    ##    Mango            Pint No low fat Organic      6.564
+    ##  Vanilla            Cone No low fat Organic      6.531
+    ##  Vanilla            Pint No low fat Organic      6.431
+    ##    Mango Homemade waffle No low fat Organic      6.420
+
+For each of the selected 5 product profiles we now count the number of
+respondents who ranked it highest among all the profiles.
+
 ``` r
+selected_profile_ratings <- predict(conjoint_by_respondent, selected_profiles)# ascertaining predicted ratings of the top five for each respondent
+
 most_preferred_by_respondent <-  selected_profile_ratings %>% 
   group_by(Respondent) %>% 
   mutate(ranking = rank(Prediction)) %>% arrange(Respondent,desc(ranking)) %>% filter(ranking == 5)
@@ -308,6 +341,14 @@ print(most_preferred_by_respondent)
     ## 13 Individual 8  Mango   Pint            No low fat Organic      11.1        5
     ## 14 Individual 9  Vanilla Pint            No low fat Organic       6.47       5
 
+## Predicted Market share
+
+The number of respondents who rated a particular product profile highest
+as a proportion of all respondents is used as an estimate of the market
+share of the profile. The assumption is that only those profiles will be
+produced in that market. The market share percentage column below shows
+the estimates.
+
 ``` r
 market_share <- most_preferred_by_respondent[-1] %>% 
   group_by(Flavor, Packaging, Light, Organic) %>% 
@@ -326,3 +367,11 @@ market_share
     ## 3 Vanilla Pint            No low fat Organic     3                      21
     ## 4 Vanilla Cone            No low fat Organic     2                      14
     ## 5 Mango   Homemade waffle No low fat Organic     1                       7
+
+## Conclusion
+
+All the questions that the exercise sought to answer were successfully
+answered. The most preferred profile is a Full fat organic Mango ice
+cream in a cone. The most important attribute is shaping consumer
+preferences is flavor. Ratings and market shares for all the selected
+profiles were also successfully and reliably predicted.
